@@ -1,5 +1,10 @@
 <resources>
     <string name="app_name">AppScheduler</string>
+    <string name="loading_progress_bar_text">Loading installed apps from system. Please wait...</string>
+    <string name="installed_app_title">These are installed apps on your phone. Select one to schedule</string>
+    <string name="open_chooser_title">Choose launch schedule</string>
+    <string name="select_date_and_time">Select date and time</string>
+    <string name="title_modify_schedule">Select an app on your phone</string>
     <string name="title_home">Upcoming schedules</string>
     <string name="title_schedule_history">History</string>
 </resources>

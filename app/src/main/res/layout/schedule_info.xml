@@ -57,7 +57,7 @@
         android:id="@+id/schedule_edit"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Edit"
+        android:text="Update"
         android:textSize="16sp"
         android:layout_marginStart="8dp"
         app:layout_constraintStart_toEndOf="@id/schedule_cancel"
