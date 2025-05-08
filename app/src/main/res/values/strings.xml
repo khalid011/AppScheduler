@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">AppScheduler</string>
+    <string name="title_home">Upcoming schedules</string>
+    <string name="title_schedule_history">History</string>
+</resources>
