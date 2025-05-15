@@ -1,6 +1,5 @@
 package com.khalid.appscheduler.ui.modifySchedule
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,10 +8,11 @@ import android.widget.RadioButton
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.khalid.appscheduler.R
-import com.khalid.appscheduler.model.InstalledApp
-import com.khalid.appscheduler.ui.listener.AppSelectionListener
+import com.khalid.appscheduler.repository.model.InstalledAppInfo
+import com.khalid.appscheduler.listener.AppSelectionListener
+import com.khalid.appscheduler.utils.AppSchedulerUtils
 
-class InstalledAppsAdapter(val installedAppsList: List<InstalledApp>, val listener: AppSelectionListener) :
+class InstalledAppsAdapter(val installedAppsList: List<InstalledAppInfo>, val listener: AppSelectionListener) :
     RecyclerView.Adapter<InstalledAppsViewHolder>() {
     private var TAG = "InstalledAppsAdapter"
 
@@ -67,23 +67,11 @@ class InstalledAppsViewHolder(adapter: InstalledAppsAdapter, itemView: View) :
         installedAppIcon = itemView.findViewById(R.id.installed_app_icon)
         installedAppTitle = itemView.findViewById(R.id.installed_app_title)
         installedAppRadio = itemView.findViewById(R.id.installed_app_radiobutton)
-
-//        itemView.setOnClickListener {
-//            installedAppRadio?.isChecked?.let { it -> installedAppRadio?.isChecked = !it }
-//            adapter.notifyItemChanged(adapter.selectedAppPosition)
-//            adapter.selectedAppPosition = adapterPosition
-//            adapter.notifyItemChanged(adapter.selectedAppPosition)
-//            Log.d(TAG, "[InstalledAppsViewHolder] appTitle: ${installedAppTitle?.text}")
-//            adapter.listener.onConfirmAppSelection(
-//                adapter.installedAppsList.get(adapterPosition).packageName,
-//                adapter.installedAppsList.get(adapterPosition).className
-//            )
-//        }
     }
 
-    fun bind(item: InstalledApp, isSelected: Boolean) {
-        installedAppIcon?.setImageDrawable(item.icon)
-        installedAppTitle?.text = item.appTitle
+    fun bind(item: InstalledAppInfo, isSelected: Boolean) {
+        installedAppIcon?.setImageDrawable(AppSchedulerUtils.getAppIcon(itemView.context, item.packageName, item.className))
+        installedAppTitle?.text = AppSchedulerUtils.getAppTitle(itemView.context, item.packageName, item.className)
         if (isSelected) {
             installedAppRadio?.isChecked = true
         } else {

@@ -1,7 +1,9 @@
 import org.gradle.kotlin.dsl.implementation
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    id("kotlin-kapt")
 }
 
 apply(plugin = "kotlin-parcelize")
@@ -12,7 +14,7 @@ android {
 
     defaultConfig {
         applicationId = "com.khalid.appscheduler"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -43,6 +45,12 @@ android {
 
 dependencies {
 
+    val room_version = "2.7.1"
+
+    implementation("androidx.room:room-runtime:$room_version")
+    kapt("androidx.room:room-compiler:$room_version")
+    // Coroutines support for Room
+    implementation("androidx.room:room-ktx:$room_version")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)

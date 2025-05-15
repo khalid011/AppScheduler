@@ -7,7 +7,7 @@ import androidx.lifecycle.ViewModel
 class ScheduleHistoryViewModel : ViewModel() {
 
     private val _text = MutableLiveData<String>().apply {
-        value = "This is schedule history Fragment"
+        value = "No successful app schedule is found."
     }
     val text: LiveData<String> = _text
 }

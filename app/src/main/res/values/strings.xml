@@ -5,6 +5,10 @@
     <string name="open_chooser_title">Choose launch schedule</string>
     <string name="select_date_and_time">Select date and time</string>
     <string name="title_modify_schedule">Select an app on your phone</string>
+    <string name="title_toast_show_duplicate_entry_error">Already schedule, please choose another schedule</string>
+    <string name="title_toast_show_error_message">Please select app and launch time</string>
     <string name="title_home">Upcoming schedules</string>
     <string name="title_schedule_history">History</string>
+    <string name="no_successful_app_schedule_is_found">No successful app schedule is found.</string>
+    <string name="no_app_schedule_is_found">No future app schedule is found.</string>
 </resources>

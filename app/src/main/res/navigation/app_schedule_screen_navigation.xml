@@ -7,17 +7,13 @@
 
     <fragment
         android:id="@+id/navigation_home"
-        android:name="com.khalid.appscheduler.ui.home.HomeFragment"
+        android:name="com.khalid.appscheduler.ui.home.AppScheduleFragment"
         android:label="@string/title_home"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_app_schedule" />
 
     <fragment
         android:id="@+id/navigation_schedule_history"
-<<<<<<< HEAD
-        android:name="com.khalid.appscheduler.ui.dashboard.ScheduleHistoryFragment"
-=======
         android:name="com.khalid.appscheduler.ui.scheduleHistory.ScheduleHistoryFragment"
->>>>>>> [Title] [AppScheduler] UX implementation #2
         android:label="@string/title_schedule_history"
         tools:layout="@layout/fragment_schedule_history" />
 

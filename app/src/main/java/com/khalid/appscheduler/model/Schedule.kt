@@ -6,5 +6,5 @@ import kotlinx.parcelize.Parcelize
 @Parcelize
 data class Schedule(
     val appName: String? = null,
-    val launchTime: String? = null
+    val launchTime: String? = null,
 ) : Parcelable

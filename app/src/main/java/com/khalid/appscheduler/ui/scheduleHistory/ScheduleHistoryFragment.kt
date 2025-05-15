@@ -28,7 +28,7 @@ class ScheduleHistoryFragment : Fragment() {
         _binding = FragmentScheduleHistoryBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        val textView: TextView = binding.textScheduleHistory
+        val textView: TextView = binding.noHistoryView
         scheduleHistoryViewModel.text.observe(viewLifecycleOwner) {
             textView.text = it
         }

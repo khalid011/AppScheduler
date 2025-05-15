@@ -2,15 +2,16 @@ package com.khalid.appscheduler
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
+import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.khalid.appscheduler.common.logger.AppScheduleLog
 import com.khalid.appscheduler.databinding.ActivityMainBinding
 import com.khalid.appscheduler.ui.modifySchedule.ModifyScheduleActivity
+import com.khalid.appscheduler.utils.AppSchedulerUtils
 
 class MainActivity : AppCompatActivity() {
 
@@ -38,10 +39,16 @@ class MainActivity : AppCompatActivity() {
         initFabButtonListener()
     }
 
+    private fun launchAddSchedule() {
+        val intent = Intent(this, ModifyScheduleActivity::class.java)
+        intent.putExtra(AppSchedulerUtils.KEY_ADD_SCHEDULE, true)
+        startActivity(intent)
+    }
+
     private fun initFabButtonListener() {
         binding.fabScheduleUpdate.setOnClickListener {
-            Log.d(TAG,"[initFabButtonListener] add/update schedule in progress...")
-            startActivity(Intent(this, ModifyScheduleActivity::class.java))
+            AppScheduleLog.d(TAG, "[initFabButtonListener] add schedule in progress...")
+            launchAddSchedule()
         }
     }
 

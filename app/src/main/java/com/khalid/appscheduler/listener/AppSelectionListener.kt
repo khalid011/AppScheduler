@@ -1,4 +1,4 @@
-package com.khalid.appscheduler.ui.listener
+package com.khalid.appscheduler.listener
 
 interface AppSelectionListener {
     fun onConfirmAppSelection(packageName: String, className: String, appName: String)

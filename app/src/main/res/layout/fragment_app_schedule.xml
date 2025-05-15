@@ -4,7 +4,21 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.home.HomeFragment">
+    tools:context=".ui.home.AppScheduleFragment">
+
+    <TextView
+        android:id="@+id/no_item_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="@string/no_app_schedule_is_found"
+        android:textColor="?android:textColorPrimary"
+        android:textSize="16sp"
+        android:gravity="center"
+        android:layout_marginBottom="58dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"/>
 
     <androidx.cardview.widget.CardView
         android:id="@+id/schedule_info_cardview"
@@ -12,7 +26,6 @@
         android:layout_height="0dp"
         android:layout_marginHorizontal="10dp"
         android:layout_marginBottom="58dp"
-        app:cardBackgroundColor="@color/black"
         app:cardElevation="10dp"
         app:cardCornerRadius="26dp"
         app:layout_constraintStart_toStartOf="parent"
@@ -22,7 +35,7 @@
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/upcoming_schedule_list"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="5dp"/>
 
