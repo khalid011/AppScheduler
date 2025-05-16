@@ -66,7 +66,7 @@ class ScheduleAppViewModel(application: Application) : AndroidViewModel(applicat
             getApplication<Application>(),
             launchTime.toInt(),
             intent,
-            PendingIntent.FLAG_UPDATE_CURRENT
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         AppScheduleLog.d(TAG, "[getPendingIntent] pending intent: $pendingIntent")
         return pendingIntent
@@ -93,6 +93,7 @@ class ScheduleAppViewModel(application: Application) : AndroidViewModel(applicat
                     alarmManager.setExact(AlarmManager.RTC_WAKEUP, launchTime, pendingIntent)
                 } else {
                     AppScheduleLog.d(TAG, "[scheduleAppLaunch]: $packageName launch permission is not granted by system")
+                    alarmManager?.set(AlarmManager.RTC_WAKEUP, launchTime, pendingIntent)
                 }
             } else {
                 AppScheduleLog.d(TAG, "[scheduleAppLaunch]: $packageName launch is scheduled successfully by set api")
