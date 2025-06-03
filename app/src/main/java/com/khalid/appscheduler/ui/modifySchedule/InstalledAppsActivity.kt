@@ -48,6 +48,7 @@ class InstalledAppsActivity : AppCompatActivity(), AppSelectionListener {
             )
             isPhoneAppsSaved =
                 sharedPref.getBoolean(AppSchedulerUtils.KEY_PHONE_APP_SAVE_STATUS, false)
+            AppScheduleLog.d(TAG,"isPhoneAppsSaved: $isPhoneAppsSaved")
             if (!isPhoneAppsSaved) {
                 viewModel?.getInstalledAppsFromSystem()
                 sharedPref.edit {

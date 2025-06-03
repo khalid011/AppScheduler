@@ -14,5 +14,6 @@ data class AppLaunchSchedule(
     val packageName: String,
     val className: String,
     val launchTime: Date?,
-    val launchStatus: Int // 0 -> not launched, 1 -> launched, -1 -> failed to launch
+    val launchStatus: Int,
+    val showNotification: Int
 ) : Parcelable

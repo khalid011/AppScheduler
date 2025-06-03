@@ -9,7 +9,7 @@ import com.khalid.appscheduler.repository.model.AppLaunchSchedule
 import com.khalid.appscheduler.repository.model.InstalledAppInfo
 import com.khalid.appscheduler.repository.utils.DateConverter
 
-@Database(entities = [AppLaunchSchedule::class, InstalledAppInfo::class], version = 4)
+@Database(entities = [AppLaunchSchedule::class, InstalledAppInfo::class], version = 5)
 @TypeConverters(DateConverter::class)
 abstract class AppScheduleDB : RoomDatabase() {
     abstract fun appScheduleDao(): AppScheduleDao

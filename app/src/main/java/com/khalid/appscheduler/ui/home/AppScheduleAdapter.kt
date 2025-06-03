@@ -19,15 +19,16 @@ class AppScheduleAdapter(
 ) : RecyclerView.Adapter<AppScheduleViewHolder>() {
 
     private val TAG = "AppScheduleAdapter"
-    var itemSelected = 0
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppScheduleViewHolder {
+        AppScheduleLog.d(TAG, "[onCreateViewHolder]")
         val view =
             LayoutInflater.from(parent.context).inflate(R.layout.schedule_info, parent, false)
         return AppScheduleViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: AppScheduleViewHolder, position: Int) {
+        AppScheduleLog.d(TAG, "[onBindViewHolder] position: $position")
         holder.scheduleCancel?.setOnClickListener {
             AppScheduleLog.d(TAG,"schedule cancel button is clicked")
             listener.onUpdate(scheduleList[position], AppSchedulerUtils.KEY_DELETE_SCHEDULE)
@@ -61,6 +62,17 @@ class AppScheduleViewHolder(itemView: View) :
     }
 
     fun bind(item: AppLaunchSchedule) {
+        if(item.showNotification == AppSchedulerUtils.Companion.ShowNotification.SHOWING.notiType) {
+            scheduleCancel?.isEnabled = false
+            scheduleCancel?.alpha = 0.6f
+            scheduleUpdate?.isEnabled = false
+            scheduleUpdate?.alpha = 0.6f
+        } else {
+            scheduleCancel?.isEnabled = true
+            scheduleCancel?.alpha = 1f
+            scheduleUpdate?.isEnabled = true
+            scheduleUpdate?.alpha = 1f
+        }
         scheduleTime?.text = AppSchedulerUtils.getLaunchTime(item.launchTime)
         scheduleAppTitle?.text = AppSchedulerUtils.getAppTitle(
             itemView.context,

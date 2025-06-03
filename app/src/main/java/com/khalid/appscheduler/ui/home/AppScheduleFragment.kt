@@ -1,6 +1,5 @@
 package com.khalid.appscheduler.ui.home
 
-import android.R.attr.visibility
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -10,9 +9,11 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.khalid.appscheduler.common.logger.AppScheduleLog
@@ -22,18 +23,17 @@ import com.khalid.appscheduler.listener.AppScheduleUpdateListener
 import com.khalid.appscheduler.repository.model.AppLaunchSchedule
 import com.khalid.appscheduler.ui.modifySchedule.ModifyScheduleActivity
 import com.khalid.appscheduler.utils.AppSchedulerUtils
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class AppScheduleFragment : Fragment(), AppScheduleUpdateListener {
 
-    private var TAG = "HomeFragment"
+    private var TAG = "AppScheduleFragment"
     private var _binding: FragmentAppScheduleBinding? = null
     private var launcher : ActivityResultLauncher<Intent>? = null
     private val binding get() = _binding!!
     private var viewModel : ScheduleAppViewModel? = null
     private var recyclerView: RecyclerView? = null
+    private var scheduleAppCount = 0
     private var appScheduleAdapter : AppScheduleAdapter? = null
 
     override fun onCreateView(
@@ -43,10 +43,20 @@ class AppScheduleFragment : Fragment(), AppScheduleUpdateListener {
     ): View {
         _binding = FragmentAppScheduleBinding.inflate(inflater, container, false)
         val root: View = binding.root
-        setupViewModel()
         initViews()
+        setupViewModel()
+        setObserver()
         registerLauncher()
         return root
+    }
+
+    fun initViews() {
+        recyclerView = binding.upcomingScheduleList
+        appScheduleAdapter = AppScheduleAdapter(mutableListOf(), this)
+        recyclerView?.apply {
+            layoutManager = LinearLayoutManager(activity)
+            adapter = appScheduleAdapter
+        }
     }
 
     private fun registerLauncher() {
@@ -54,7 +64,7 @@ class AppScheduleFragment : Fragment(), AppScheduleUpdateListener {
             AppScheduleLog.d(TAG, "[registerLauncher] result code: ${it.resultCode}, result data: ${it.data}")
             if (it.resultCode == AppSchedulerUtils.RESULT_SUCCESS) {
                 AppScheduleLog.d(TAG,"[registerLauncher] current app schedule is updated.")
-                updateAppScheduleList()
+//                updateAppScheduleList()
             } else {
                 AppScheduleLog.d(TAG,"[registerLauncher] No app schedule is updated.")
             }
@@ -63,7 +73,7 @@ class AppScheduleFragment : Fragment(), AppScheduleUpdateListener {
 
     override fun onResume() {
         super.onResume()
-        updateAppScheduleList()
+        AppScheduleLog.d(TAG, "[onResume] schedule app count: $scheduleAppCount")
     }
     private fun setupViewModel() {
         viewModel = ViewModelProvider(
@@ -74,8 +84,6 @@ class AppScheduleFragment : Fragment(), AppScheduleUpdateListener {
         viewModel?.deleteSuccessStatus?.observe(viewLifecycleOwner, Observer {
             if(it) {
                 AppScheduleLog.d(TAG, "[setupViewModel] delete success")
-                updateAppScheduleList()
-                // TODO: Cancel the schedule
             } else {
                 AppScheduleLog.d(TAG, "[setupViewModel] delete failure")
                 Toast.makeText(context, "Delete failure", Toast.LENGTH_SHORT).show()
@@ -83,51 +91,31 @@ class AppScheduleFragment : Fragment(), AppScheduleUpdateListener {
         })
     }
 
-    private fun initViews() {
-        lifecycleScope.launch(Dispatchers.Default) {
-            val listOfSchedule = viewModel?.getAllSchedules()?.toMutableList() ?: emptyList()
-            recyclerView = binding.upcomingScheduleList
-            appScheduleAdapter = AppScheduleAdapter(listOfSchedule as MutableList<AppLaunchSchedule>, this@AppScheduleFragment)
-            recyclerView?.apply {
-                layoutManager = LinearLayoutManager(activity)
-                adapter = appScheduleAdapter
-//                visibility = View.GONE
-            }
-            withContext(Dispatchers.Main) {
-                updateView(listOfSchedule.size)
+    private fun setObserver() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel?.scheduleAppState?.collect { scheduledAppList ->
+                    AppScheduleLog.d(TAG, "[setObserver] UI resumes, schedule app list: ${scheduledAppList.size}")
+                    scheduleAppCount = scheduledAppList.size
+                    if (scheduleAppCount == 0) {
+                        binding.scheduleInfoCardview.visibility = View.GONE
+                        binding.noItemView.visibility = View.VISIBLE
+                    } else {
+                        binding.scheduleInfoCardview.visibility = View.VISIBLE
+                        binding.noItemView.visibility = View.GONE
+                        appScheduleAdapter?.scheduleList =
+                            scheduledAppList as MutableList<AppLaunchSchedule>
+                        appScheduleAdapter?.notifyDataSetChanged() // TODO: Notify only the changed item
+                    }
+                }
             }
         }
+
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-    }
-
-    private fun updateView(scheduleCount : Int) {
-        AppScheduleLog.d(TAG, "[updateView] schedule count: $scheduleCount")
-        if(scheduleCount == 0) {
-            binding.scheduleInfoCardview.visibility = View.GONE
-            binding.noItemView.visibility = View.VISIBLE
-            binding.noItemView.bringToFront()
-        } else if(scheduleCount > 0) {
-            binding.noItemView.visibility = View.GONE
-            binding.scheduleInfoCardview.visibility = View.VISIBLE
-//            binding.scheduleInfoCardview.requestLayout()
-        } else {
-            binding.scheduleInfoCardview.visibility = View.GONE
-        }
-    }
-
-    private fun updateAppScheduleList() {
-        lifecycleScope.launch(Dispatchers.Default) {
-            val updatedScheduleList = viewModel?.getAllSchedules()?.toMutableList() ?: emptyList()
-            appScheduleAdapter?.scheduleList = updatedScheduleList as MutableList<AppLaunchSchedule>
-            withContext(Dispatchers.Main) {
-                updateView(updatedScheduleList.size)
-                appScheduleAdapter?.notifyDataSetChanged() // TODO: Notify only the changed item
-            }
-        }
     }
 
     private fun launchModifyAppSchedule(schedule: AppLaunchSchedule) {
@@ -138,8 +126,8 @@ class AppScheduleFragment : Fragment(), AppScheduleUpdateListener {
 
     private fun deleteAppSchedule(schedule: AppLaunchSchedule) {
         lifecycleScope.launch {
-            viewModel?.cancelAppLaunch(schedule.packageName, schedule.className, schedule.launchTime?.time ?: 0)
-            viewModel?.deleteSchedule(schedule)
+            viewModel?.cancelAppLaunch(schedule) // cancel schedule
+            viewModel?.deleteSchedule(schedule) // delete entry from database
         }
     }
 

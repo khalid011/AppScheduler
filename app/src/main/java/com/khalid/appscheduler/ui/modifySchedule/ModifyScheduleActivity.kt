@@ -16,6 +16,8 @@ import com.khalid.appscheduler.databinding.ActivityModifyScheduleBinding
 import com.khalid.appscheduler.model.Schedule
 import com.khalid.appscheduler.repository.model.AppLaunchSchedule
 import com.khalid.appscheduler.utils.AppSchedulerUtils
+import com.khalid.appscheduler.utils.AppSchedulerUtils.Companion.InputType
+import com.khalid.appscheduler.utils.AppSchedulerUtils.Companion.schedule
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -47,6 +49,9 @@ class ModifyScheduleActivity : AppCompatActivity() {
     private fun initViews() {
         if(intent.hasExtra(AppSchedulerUtils.KEY_MODIFY_SCHEDULE)) {
             binding.currentScheduleCardview.visibility = View.VISIBLE
+            binding.newScheduleInfoTitle.text = "Updated schedule"
+            binding.newScheduleAppNameLayout.visibility = View.GONE
+            binding.newScheduleAppLaunchTime.text = "New time schedule"
             currentSchedule = intent.getParcelableExtra<Schedule>(AppSchedulerUtils.KEY_MODIFY_SCHEDULE) as AppLaunchSchedule
             binding.currentScheduledAppName.text = AppSchedulerUtils.getAppTitle(
                 this@ModifyScheduleActivity,
@@ -118,10 +123,10 @@ class ModifyScheduleActivity : AppCompatActivity() {
         picker.display()
     }
 
-    private fun processSchedule(result: Int) : Boolean {
-        AppScheduleLog.d(TAG, "[processSchedule] result: $result")
+    private fun processSchedule(result: Int, type: InputType) : Boolean {
+        AppScheduleLog.d(TAG, "[processSchedule] result: $result, type: $type")
         if(result != AppSchedulerUtils.DUPLICATE_LAUNCH_TIME) {
-            scheduleAppLaunch()
+            scheduleAppLaunch(type)
             return true
         } else {
             Toast.makeText(this, getString(R.string.title_toast_show_duplicate_entry_error), Toast.LENGTH_SHORT).show()
@@ -129,49 +134,101 @@ class ModifyScheduleActivity : AppCompatActivity() {
         return false
     }
 
-    private fun handleDoneButton() {
-        if(selectedAppPackageName != null && selectedAppClassName != null && selectedAppLaunchTime != null) {
-            AppScheduleLog.d(TAG, "[handleDoneButton] handling 'Done' button, launch schedule for:\n" +
-                    "packageName: $selectedAppPackageName\n" +
-                    "className: $selectedAppClassName\n" +
-                    "launchTime: $selectedAppLaunchTime"
-            )
-            if(intent.hasExtra(AppSchedulerUtils.KEY_MODIFY_SCHEDULE)) {
-                updateAppSchedule()?.let { result ->
-                    val isScheduleUpdated = processSchedule(result)
-                    if(isScheduleUpdated) {
-                        // Cancel previous schedule
-                        cancelSchedule()
-                        sendSuccessResult()
-                    }
+    private fun isInputValid(type: InputType) : Boolean {
+        AppScheduleLog.d(TAG, "[isInputValid] packageName: $selectedAppPackageName\n" +
+                "className: $selectedAppClassName\n" +
+                "launchTime: $selectedAppLaunchTime"
+        )
+        if (type == InputType.SELECT_APP) {
+            return selectedAppPackageName != null && selectedAppClassName != null && selectedAppLaunchTime != null
+        }
+        return selectedAppLaunchTime != null
+    }
 
-               }
-            } else if(intent.hasExtra(AppSchedulerUtils.KEY_ADD_SCHEDULE)) {
-                insertAppSchedule()?.let { result ->
-                    val isScheduleUpdated = processSchedule(result)
-                    if(isScheduleUpdated) {
-                        sendSuccessResult()
+    private fun handleDoneButton() {
+        when {
+            intent.hasExtra(AppSchedulerUtils.KEY_MODIFY_SCHEDULE) -> {
+                if(isInputValid(InputType.SELECT_TIME_DATE)) {
+                    updateAppSchedule()?.let { result ->
+                        val isScheduleUpdated = processSchedule(result, InputType.SELECT_TIME_DATE)
+                        if(isScheduleUpdated) {
+                            // Cancel previous schedule
+                            cancelSchedule()
+                            sendSuccessResult()
+                        }
                     }
+                } else {
+                    Toast.makeText(
+                        this,
+                        getString(R.string.title_toast_show_error_message_modify_launch_time),
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
-            } else {
+            }
+            intent.hasExtra(AppSchedulerUtils.KEY_ADD_SCHEDULE) -> {
+                if(isInputValid(InputType.SELECT_APP)) {
+                    insertAppSchedule()?.let { result ->
+                        val isScheduleUpdated = processSchedule(result, InputType.SELECT_APP)
+                        if(isScheduleUpdated) {
+                            sendSuccessResult()
+                        }
+                    }
+                } else {
+                    Toast.makeText(
+                        this,
+                        getString(R.string.title_toast_show_error_message),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+            else -> {
                 AppScheduleLog.d(TAG,"[handleDoneButton] Unknown intent received")
             }
-        } else {
-            Toast.makeText(this, getString(R.string.title_toast_show_error_message), Toast.LENGTH_SHORT).show()
         }
 
     }
 
     private fun cancelSchedule() {
         viewModel?.cancelAppLaunch(
-            currentSchedule?.packageName ?: "",
-            currentSchedule?.className ?: "",
-            currentSchedule?.launchTime?.time ?: 0
+            AppLaunchSchedule(
+                id = currentSchedule?.id ?: 0,
+                packageName = currentSchedule?.packageName ?: "",
+                className = currentSchedule?.className ?: "",
+                launchTime = currentSchedule?.launchTime ?: Date(),
+                launchStatus = AppSchedulerUtils.Companion.LaunchSchedule.LAUNCH_CANCELLED.status,
+                showNotification = AppSchedulerUtils.Companion.ShowNotification.NOT_SHOWING.notiType
+            )
+//            currentSchedule?.packageName ?: "",
+//            currentSchedule?.className ?: "",
+//            currentSchedule?.launchTime?.time ?: 0
         )
     }
 
-    private fun scheduleAppLaunch() {
-        viewModel?.scheduleAppLaunch(selectedAppPackageName!!, selectedAppClassName!!, selectedAppLaunchTime!!.time)
+    private fun scheduleAppLaunch(type: InputType) {
+        if(type == InputType.SELECT_TIME_DATE) {
+            currentSchedule?.let { schedule ->
+                viewModel?.scheduleAppLaunch(
+                    AppLaunchSchedule(
+                        id = schedule.id,
+                        packageName = schedule.packageName,
+                        className = schedule.className,
+                        launchTime = selectedAppLaunchTime!!,
+                        launchStatus = AppSchedulerUtils.Companion.LaunchSchedule.LAUNCH_SCHEDULED.status,
+                        showNotification = AppSchedulerUtils.Companion.ShowNotification.NOT_SHOWING.notiType
+                    )
+                )
+            }
+        } else {
+            viewModel?.scheduleAppLaunch(
+                AppLaunchSchedule(
+                    packageName = selectedAppPackageName!!,
+                    className = selectedAppClassName!!,
+                    launchTime = selectedAppLaunchTime!!,
+                    launchStatus = AppSchedulerUtils.Companion.LaunchSchedule.LAUNCH_SCHEDULED.status,
+                    showNotification = AppSchedulerUtils.Companion.ShowNotification.NOT_SHOWING.notiType
+                )
+            )
+        }
     }
 
 
@@ -202,10 +259,11 @@ class ModifyScheduleActivity : AppCompatActivity() {
                     updateResult = viewModel?.updateSchedule(
                         AppLaunchSchedule(
                             id = schedule.id,
-                            packageName = selectedAppPackageName!!,
-                            className = selectedAppClassName!!,
+                            packageName = schedule.packageName,
+                            className = schedule.className,
                             launchTime = selectedAppLaunchTime!!,
-                            launchStatus = AppSchedulerUtils.STATUS_APP_LAUNCH_SCHEDULED
+                            launchStatus = AppSchedulerUtils.Companion.LaunchSchedule.LAUNCH_SCHEDULED.status,
+                            showNotification = AppSchedulerUtils.Companion.ShowNotification.NOT_SHOWING.notiType
                         )
                     )
                 }
@@ -224,7 +282,8 @@ class ModifyScheduleActivity : AppCompatActivity() {
                         packageName = selectedAppPackageName!!,
                         className = selectedAppClassName!!,
                         launchTime = selectedAppLaunchTime!!,
-                        launchStatus = AppSchedulerUtils.STATUS_APP_LAUNCH_SCHEDULED
+                        launchStatus = AppSchedulerUtils.Companion.LaunchSchedule.LAUNCH_SCHEDULED.status,
+                        showNotification = AppSchedulerUtils.Companion.ShowNotification.NOT_SHOWING.notiType
                     )
                 )
             }.join()

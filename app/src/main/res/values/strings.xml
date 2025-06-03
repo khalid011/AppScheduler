@@ -1,5 +1,9 @@
 <resources>
     <string name="app_name">AppScheduler</string>
+    <string name="notification_title">Time to Open Your App!</string>
+    <string name="notification_channel_name">App Launch Notifications</string>
+    <string name="notification_name">App Launch Notifications</string>
+    <string name="notification_description">Your scheduled app is ready to launch. Tap here to open it now!</string>
     <string name="loading_progress_bar_text">Loading installed apps from system. Please wait...</string>
     <string name="installed_app_title">These are installed apps on your phone. Select one to schedule</string>
     <string name="open_chooser_title">Choose launch schedule</string>
@@ -7,6 +11,8 @@
     <string name="title_modify_schedule">Select an app on your phone</string>
     <string name="title_toast_show_duplicate_entry_error">Already schedule, please choose another schedule</string>
     <string name="title_toast_show_error_message">Please select app and launch time</string>
+    <string name="title_toast_show_error_message_modify_launch_time">Please select launch time</string>
+
     <string name="title_home">Upcoming schedules</string>
     <string name="title_schedule_history">History</string>
     <string name="no_successful_app_schedule_is_found">No successful app schedule is found.</string>

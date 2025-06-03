@@ -21,7 +21,7 @@ class AppLaunchScheduleService : Service() {
                 return START_NOT_STICKY
             }
             AppScheduleLog.d(TAG, "[AppLaunchBroadcastReceiver] $packageName is installed on device")
-            startForeground(1, AppSchedulerUtils.Companion.createAppLaunchNotification(this))
+//            startForeground(1, AppSchedulerUtils.createAppLaunchNotification(this))
             launchApp(packageName, className)
             stopSelf()
             return START_NOT_STICKY

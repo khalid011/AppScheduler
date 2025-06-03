@@ -7,12 +7,12 @@ import com.khalid.appscheduler.repository.db.AppScheduleDao
 import com.khalid.appscheduler.repository.model.AppLaunchSchedule
 import com.khalid.appscheduler.repository.model.InstalledAppInfo
 import com.khalid.appscheduler.utils.AppSchedulerUtils
+import kotlinx.coroutines.flow.Flow
 import java.util.Date
 
 class AppScheduleRepository(private val appScheduleDao: AppScheduleDao) {
 
     private val TAG = "AppScheduleRepository"
-
 
     suspend fun getScheduleByLaunchTime(launchTime: Date): Int {
         try {
@@ -39,14 +39,18 @@ class AppScheduleRepository(private val appScheduleDao: AppScheduleDao) {
             AppScheduleLog.d(TAG, "[insertInstalledAppInfo] error: ${e.message}")
         }
     }
-    suspend fun getAllSchedules(): List<AppLaunchSchedule> {
-        try {
-            return appScheduleDao.getAllSchedules()
-        } catch (e: Exception) {
-            AppScheduleLog.d(TAG, "[getAllSchedules] error: ${e.message}")
-        }
-        return emptyList()
-    }
+
+    val previousSchedule: Flow<List<AppLaunchSchedule>> = appScheduleDao.getPreviousSuccessfulSchedules()
+    val schedules: Flow<List<AppLaunchSchedule>> = appScheduleDao.getUpcomingSchedules()
+
+//    suspend fun getAllSchedules(): LiveData<List<AppLaunchSchedule>> {
+//        try {
+//            return appScheduleDao.getAllSchedules()
+//        } catch (e: Exception) {
+//            AppScheduleLog.d(TAG, "[getAllSchedules] error: ${e.message}")
+//        }
+//        return LiveData<List<AppLaunchSchedule>>()
+//    }
 
     suspend fun insertSchedule(schedule: AppLaunchSchedule) : Int {
         try {
@@ -59,6 +63,24 @@ class AppScheduleRepository(private val appScheduleDao: AppScheduleDao) {
             }
         }
         return AppSchedulerUtils.DB_CRUD_SUCCESS
+    }
+
+    fun updateNotiStatus(packageName: String, className: String, notiStatus: Int) {
+        AppScheduleLog.d(TAG, "[updateNotiStatus] updating noti status...set: $notiStatus")
+        try {
+            appScheduleDao.updateNotiStatus(packageName, className, notiStatus)
+        } catch (e: Exception) {
+            AppScheduleLog.d(TAG, "[updateNotiStatus] error: ${e.message}")
+        }
+    }
+
+    suspend fun updateLaunchStatus(packageName: String, className: String, launchStatus: Int) {
+        AppScheduleLog.d(TAG, "[updateLaunchStatus] updating launch status...set: $launchStatus")
+        try {
+            appScheduleDao.updateLaunchStatus(packageName, className, launchStatus)
+        } catch (e: Exception) {
+            AppScheduleLog.d(TAG, "[updateLaunchStatus] error: ${e.message}")
+        }
     }
 
     suspend fun updateSchedule(schedule: AppLaunchSchedule) : Int? {
@@ -75,9 +97,18 @@ class AppScheduleRepository(private val appScheduleDao: AppScheduleDao) {
         return AppSchedulerUtils.DB_CRUD_SUCCESS
     }
 
+    suspend fun deleteScheduleByPackageAndClass(packageName: String, className: String) : Int {
+        try {
+            return appScheduleDao.deleteScheduleByPackageAndClass(packageName, className)
+        } catch (e: Exception) {
+            AppScheduleLog.d(TAG, "[deleteScheduleByPackageAndClass] error: ${e.message}")
+        }
+        return 0 // delete failure. No item is deleted
+    }
+
     suspend fun deleteSchedule(schedule: AppLaunchSchedule) : Int {
         try {
-            return appScheduleDao.deleteSchedule(schedule)
+            return appScheduleDao.deleteScheduleByPackageAndClass(schedule.packageName, schedule.className)
         } catch (e: Exception) {
             AppScheduleLog.d(TAG, "[deleteSchedule] error: ${e.message}")
         }

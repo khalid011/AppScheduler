@@ -10,15 +10,18 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.khalid.appscheduler.common.broadcast.AppLaunchBroadcastReceiver
+import com.khalid.appscheduler.common.broadcast.ShowNotificationBroadcastReceiver
 import com.khalid.appscheduler.common.logger.AppScheduleLog
 import com.khalid.appscheduler.repository.AppScheduleRepository
 import com.khalid.appscheduler.repository.db.AppScheduleDB
 import com.khalid.appscheduler.repository.model.AppLaunchSchedule
 import com.khalid.appscheduler.utils.AppSchedulerUtils
+import com.khalid.appscheduler.utils.AppSchedulerUtils.Companion.getPhoneAlarmManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.util.Date
 
@@ -32,11 +35,29 @@ class ScheduleAppViewModel(application: Application) : AndroidViewModel(applicat
     private val _duplicateLaunchTimeFound = MutableLiveData<Boolean>()
     val duplicateLaunchTimeFound: MutableLiveData<Boolean> = _duplicateLaunchTimeFound
 
+    private val _scheduleAppState = MutableStateFlow<List<AppLaunchSchedule>>(emptyList())
+    val scheduleAppState: StateFlow<List<AppLaunchSchedule>> = _scheduleAppState
+
+    private val _previousScheduleAppState = MutableStateFlow<List<AppLaunchSchedule>>(emptyList())
+    val previousScheduleAppState: StateFlow<List<AppLaunchSchedule>> = _previousScheduleAppState
+
     init {
         val context = getApplication<Application>().applicationContext
         val db = AppScheduleDB.Companion.getInstance(getApplication())
         val dao = db.appScheduleDao()
         repository = AppScheduleRepository(dao)
+        viewModelScope.launch {
+            AppScheduleLog.d(TAG, "[init] get all schedules from repository")
+            repository?.schedules?.collect {
+                _scheduleAppState.value = it
+            }
+        }
+        viewModelScope.launch {
+            AppScheduleLog.d(TAG, "[init] get all previous schedules from repository")
+            repository?.previousSchedule?.collect {
+                _previousScheduleAppState.value = it
+            }
+        }
     }
 
     fun getScheduleByLaunchTime(launchTime: Date): Int {
@@ -52,19 +73,14 @@ class ScheduleAppViewModel(application: Application) : AndroidViewModel(applicat
 
     }
 
-    private fun getPhoneAlarmManager() : AlarmManager? {
-        val alarmManager : AlarmManager? = getApplication<Application>().getSystemService(Context.ALARM_SERVICE) as? AlarmManager
-        return alarmManager
-    }
-
-    private fun getPendingIntent(packageName: String, className: String, launchTime: Long) : PendingIntent {
-        val intent = Intent(getApplication<Application>(), AppLaunchBroadcastReceiver::class.java).apply {
-            putExtra(AppSchedulerUtils.Companion.KEY_SELECTED_APP_PACKAGE, packageName)
-            putExtra(AppSchedulerUtils.Companion.KEY_SELECTED_APP_CLASS, className)
+    private fun getPendingIntent(schedule: AppLaunchSchedule) : PendingIntent {
+        val intent = Intent(getApplication<Application>(), ShowNotificationBroadcastReceiver::class.java).apply {
+            putExtra(AppSchedulerUtils.Companion.KEY_SCHEDULE_INFO, schedule)
         }
+
         val pendingIntent = PendingIntent.getBroadcast(
             getApplication<Application>(),
-            launchTime.toInt(),
+            schedule.launchTime?.time?.toInt() ?: 0,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
@@ -72,39 +88,34 @@ class ScheduleAppViewModel(application: Application) : AndroidViewModel(applicat
         return pendingIntent
     }
 
-    fun cancelAppLaunch(packageName: String, className: String, launchTime: Long) {
-        AppScheduleLog.d(TAG, "[cancelAppLaunch] packageName: $packageName, className: $className, launchTime: $launchTime")
+    fun cancelAppLaunch(schedule: AppLaunchSchedule) {
+        AppScheduleLog.d(
+            TAG,
+            "[cancelAppLaunch] packageName: ${schedule.packageName}, className: ${schedule.className}, launchTime: ${schedule.launchTime}"
+        )
         try {
-            val pendingIntent = getPendingIntent(packageName, className, launchTime)
-            getPhoneAlarmManager()?.cancel(pendingIntent)
+            val pendingIntent = getPendingIntent(schedule)
+            AppSchedulerUtils.getPhoneAlarmManager(getApplication<Application>())
+                ?.cancel(pendingIntent)
         } catch (exception: Exception) {
-            AppScheduleLog.d(TAG, "[cancelAppLaunch]: Error cancelling app schedule: ${exception.message}")
+            AppScheduleLog.d(
+                TAG,
+                "[cancelAppLaunch]: Error cancelling app schedule: ${exception.message}"
+            )
         }
     }
 
-    fun scheduleAppLaunch(packageName: String, className: String, launchTime: Long) {
+    fun scheduleAppLaunch(schedule: AppLaunchSchedule) {
         try {
-            val pendingIntent = getPendingIntent(packageName, className, launchTime)
-            val alarmManager = getPhoneAlarmManager()
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                val isGrantedPermission = alarmManager?.canScheduleExactAlarms() == true
-                if(isGrantedPermission == true) {
-                    AppScheduleLog.d(TAG, "[scheduleAppLaunch]: $packageName launch is scheduled successfully by setExact api")
-                    alarmManager.setExact(AlarmManager.RTC_WAKEUP, launchTime, pendingIntent)
-                } else {
-                    AppScheduleLog.d(TAG, "[scheduleAppLaunch]: $packageName launch permission is not granted by system")
-                    alarmManager?.set(AlarmManager.RTC_WAKEUP, launchTime, pendingIntent)
-                }
-            } else {
-                AppScheduleLog.d(TAG, "[scheduleAppLaunch]: $packageName launch is scheduled successfully by set api")
-                alarmManager?.set(AlarmManager.RTC_WAKEUP, launchTime, pendingIntent)
-            }
+            val pendingIntent = getPendingIntent(schedule)
+            AppSchedulerUtils.schedule(getApplication<Application>(), schedule, pendingIntent)
         } catch (exception: Exception) {
             AppScheduleLog.d(TAG, "[scheduleAppLaunch]: Error scheduling app launch: ${exception.message}")
         }
     }
 
-    suspend fun getAllSchedules() = repository?.getAllSchedules()
+
+//    suspend fun getAllSchedules() = repository?.getAllSchedules()
 
     suspend fun insertSchedule(schedule: AppLaunchSchedule) : Int? {
         val result = repository?.insertSchedule(schedule)
