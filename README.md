@@ -10,14 +10,14 @@ Requirement:
 <h2>📸 App Screenshots</h2>
 
 <p float="left">
-  <img src="assets/app_screenshot/app_schedule_screenshot1.png" alt="Homescreen" width="220" />
-  <img src="assets/app_screenshot/app_schedule_screenshot2.png" alt="Homescreen" width="220" />
-  <img src="assets/app_screenshot/app_schedule_screenshot3.png" alt="Homescreen" width="220" />
-  <img src="assets/app_screenshot/app_schedule_screenshot4.png" alt="Homescreen" width="220" />
-  <img src="assets/app_screenshot/app_schedule_screenshot5.png" alt="Homescreen" width="220" />
-  <img src="assets/app_screenshot/app_schedule_screenshot6.png" alt="Homescreen" width="220" />
-  <img src="assets/app_screenshot/app_schedule_screenshot7.png" alt="Homescreen" width="220" />
-  <img src="assets/app_screenshot/app_schedule_screenshot8.png" alt="Homescreen" width="220" />
+  <img src="assets/app_screenshot/app_schedule_screenshot_1.png" alt="Homescreen" width="220" />
+  <img src="assets/app_screenshot/app_schedule_screenshot_2.png" alt="Homescreen" width="220" />
+  <img src="assets/app_screenshot/app_schedule_screenshot_3.png" alt="Homescreen" width="220" />
+  <img src="assets/app_screenshot/app_schedule_screenshot_4.png" alt="Homescreen" width="220" />
+  <img src="assets/app_screenshot/app_schedule_screenshot_5.png" alt="Homescreen" width="220" />
+  <img src="assets/app_screenshot/app_schedule_screenshot_6.png" alt="Homescreen" width="220" />
+  <img src="assets/app_screenshot/app_schedule_screenshot_7.png" alt="Homescreen" width="220" />
+  <img src="assets/app_screenshot/app_schedule_screenshot_8.png" alt="Homescreen" width="220" />
 </p>
 
 ## ✅ Features
